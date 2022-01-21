@@ -5,19 +5,28 @@ import axios from 'axios';
 const FileUpload = () => {
   const [file, setFile] = useState('');
   const [filename, setFilename] = useState('Choose File');
-  const [message, setMessage] = useState('');
-  const [disabled, setDisabled] = useState(false);
+  const [message, setMessage] = useState(
+    '1. Waiting for file to be selected...'
+  );
+  const [disabled, setDisabled] = useState(true);
+  const [typeAlert, setTypeAlert] = useState('secondary');
 
   const onChange = (e) => {
     setFile(e.target.files[0]);
     setFilename(e.target.files[0].name);
-    console.log('FILE:', file);
+    setDisabled(false);
+    setMessage('2. Click on "Upload"...');
+    setTypeAlert('warning');
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
     formData.append('image', file);
+
+    setTypeAlert('primary');
+    setMessage(`3. Uploading file "${filename}"...`);
+    setDisabled(true);
 
     await axios({
       method: 'post',
@@ -28,23 +37,20 @@ const FileUpload = () => {
       },
     })
       .then(() => {
+        setTypeAlert('success');
         setMessage(`File "${filename}" Uploaded`);
-        setDisabled(true);
       })
       .catch((res) => {
-        if (res.response.status === 500) {
-          setMessage('There was a problem with the server');
-        } else {
-          setMessage(res.response.data.msg);
-        }
-        console.log(res);
+        setTypeAlert('danger');
+        setMessage('There was a problem uploading file.');
+        setDisabled(false);
       });
   };
   return (
     <Fragment>
-      {message ? <Message msg={message} /> : null}
+      {message ? <Message msg={message} type={typeAlert} /> : null}
       <form onSubmit={onSubmit}>
-        <div className="custom-file mb-4">
+        <div className="custom-file mb-1 mt-4">
           <input
             type="file"
             className="custom-file-input"
